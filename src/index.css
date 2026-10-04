@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   BugsCry — Evidence-Grounded Security UI
+   Dark-first palette from the project UI kit (WCAG AA verified pairs).
+   shadcn CSS variables are mapped onto the kit palette so all stock
+   components render dark by default.
+   ========================================================================== */
+
+@layer base {
+  :root {
+    /* shadcn tokens — dark kit palette */
+    --background: 216 50% 12%;          /* #0F1B2D primary-900 */
+    --foreground: 216 33% 97%;          /* #F4F6F9 neutral-0   */
+    --card: 215 46% 16%;                /* #16263C primary-800 */
+    --card-foreground: 216 33% 97%;
+    --popover: 215 46% 16%;
+    --popover-foreground: 216 33% 97%;
+    --primary: 25 95% 53%;              /* #F97316 accent-500  */
+    --primary-foreground: 216 50% 12%;
+    --secondary: 215 42% 21%;           /* #1E3250 primary-700 */
+    --secondary-foreground: 216 27% 93%;
+    --muted: 215 42% 21%;
+    --muted-foreground: 213 17% 66%;    /* #9AA7B8 neutral-400 */
+    --accent: 174 80% 40%;              /* #14B8A6 teal-500    */
+    --accent-foreground: 216 50% 12%;
+    --destructive: 0 84% 60%;           /* #EF4444 danger-500  */
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 32% 24%;              /* #2A3B52 primary-600 */
+    --input: 215 32% 24%;
+    --ring: 210 81% 92%;                /* #D6E4F5 primary-100 */
+    --radius: 0.5rem;
+    --sidebar-background: 215 46% 16%;
+    --sidebar-foreground: 216 27% 93%;
+    --sidebar-primary: 25 95% 53%;
+    --sidebar-primary-foreground: 216 50% 12%;
+    --sidebar-accent: 215 42% 21%;
+    --sidebar-accent-foreground: 216 27% 93%;
+    --sidebar-border: 215 32% 24%;
+    --sidebar-ring: 210 81% 92%;
+
+    /* kit tokens */
+    --ink-900: #0F1B2D;
+    --ink-800: #16263C;
+    --ink-700: #1E3250;
+    --ink-600: #2A3B52;
+    --ink-100: #D6E4F5;
+    --mist-900: #11161D;
+    --mist-400: #9AA7B8;
+    --mist-100: #E7ECF2;
+    --mist-0: #F4F6F9;
+    --brand-500: #F97316;
+    --brand-600: #D9630E;
+    --teal-500: #14B8A6;
+    --sev-critical: #EF4444;
+    --sev-high: #F59E0B;
+    --sev-medium: #EAB308;
+    --sev-low: #22C55E;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  ::selection {
+    background: rgba(249, 115, 22, 0.35);
+  }
+}
+
+/* Visible focus ring (WCAG 2.4.7) */
+:focus-visible {
+  outline: 2px solid var(--ink-100);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Subtle grid texture for hero */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(214, 228, 245, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(214, 228, 245, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Pipeline connector pulse */
+@keyframes flowdash {
+  to { stroke-dashoffset: -24; }
+}
+.flow-line {
+  stroke-dasharray: 6 6;
+  animation: flowdash 1.2s linear infinite;
+}
+
+/* Spinner */
+@keyframes spin360 {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  animation: spin360 0.9s linear infinite;
+}
