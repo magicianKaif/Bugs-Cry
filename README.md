@@ -448,7 +448,7 @@ This repository accompanies the research work:
 
 > **An Evidence-Grounded Multi-Agent LLM Framework for Vulnerability Analysis and Report Generation**
 
-**Author:** Kaif Shaikh
+**Author:** Kaif Shaikh ( Magician Slime )
 
 The research describes the framework architecture, orchestration protocol, evaluation methodology, limitations, and future research directions.
 
@@ -456,7 +456,7 @@ The research describes the framework architecture, orchestration protocol, evalu
 
 ## Author
 
-**Kaif Shaikh**
+**Kaif Shaikh ( Magician Slime )**
 Cybersecurity Student & Security Researcher
 
 ---
