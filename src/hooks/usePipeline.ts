@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { callGeminiJson, type GeminiPart } from '@/lib/gemini';
 import { evidenceToParts } from '@/lib/files';
+import { makeDemoReport } from '@/lib/demoReport';
 import { buildAnalystPrompt, buildReportPrompt, buildTranslatorPrompt } from '@/lib/prompts';
 import type {
   AnalystResult,
@@ -24,6 +25,8 @@ export interface PipelineState {
   analyst: AnalystResult | null;
   translator: TranslatorResult | null;
   report: FinalReport | null;
+  demo: boolean;
+  reviewed: boolean;
 }
 
 export function usePipeline() {
@@ -35,6 +38,8 @@ export function usePipeline() {
     analyst: null,
     translator: null,
     report: null,
+    demo: false,
+    reviewed: false,
   });
   const abortRef = useRef<AbortController | null>(null);
 
@@ -60,7 +65,13 @@ export function usePipeline() {
       analyst: null,
       translator: null,
       report: null,
+      demo: false,
+      reviewed: false,
     });
+  }, []);
+
+  const markReviewed = useCallback(() => {
+    setState((s) => (s.report ? { ...s, reviewed: true } : s));
   }, []);
 
   const run = useCallback(
@@ -77,6 +88,8 @@ export function usePipeline() {
         analyst: null,
         translator: null,
         report: null,
+        demo: false,
+        reviewed: false,
       });
 
       const evidenceParts: GeminiPart[] = evidenceToParts(evidence, pastedText);
@@ -151,17 +164,22 @@ export function usePipeline() {
         setState((s) => ({ ...s, running: false, analyst, translator, report }));
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        appendLog(`Pipeline failed: ${msg}`);
+        if (controller.signal.aborted) return;
+        const demoReport = makeDemoReport();
+        appendLog(`Gemini analysis unavailable (${msg}). Showing synthetic preview data only; submitted evidence was not analyzed.`);
         setState((s) => ({
           ...s,
           running: false,
-          error: msg,
-          stages: s.stages.map((st) => (st.status === 'running' ? { ...st, status: 'error' } : st)),
+          error: null,
+          report: demoReport,
+          demo: true,
+          reviewed: false,
+          stages: s.stages.map((st) => ({ ...st, status: 'demo' as const, note: 'Synthetic preview; Gemini unavailable' })),
         }));
       }
     },
     [appendLog, setStage],
   );
 
-  return { ...state, run, reset };
+  return { ...state, run, reset, markReviewed };
 }

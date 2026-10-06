@@ -24,6 +24,8 @@ function StageCard({ idx, info }: { idx: number; info: StageInfo }) {
       ? 'border-brand-500 shadow-lg shadow-brand-500/10'
       : info.status === 'done'
         ? 'border-teal-500/60'
+        : info.status === 'demo'
+          ? 'border-sev-medium/60'
         : info.status === 'error'
           ? 'border-sev-critical'
           : 'border-ink-600';
@@ -47,6 +49,9 @@ function StageCard({ idx, info }: { idx: number; info: StageInfo }) {
         )}
         {info.status === 'done' && (
           <span className="rounded-full bg-teal-500/15 px-2 py-0.5 text-xs font-semibold text-teal-500">done</span>
+        )}
+        {info.status === 'demo' && (
+          <span className="rounded-full bg-sev-medium/15 px-2 py-0.5 text-xs font-semibold text-sev-medium">demo</span>
         )}
         {info.status === 'error' && (
           <span className="rounded-full bg-sev-critical/15 px-2 py-0.5 text-xs font-semibold text-sev-critical">failed</span>

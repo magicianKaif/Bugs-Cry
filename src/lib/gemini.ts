@@ -18,7 +18,9 @@ export const GEMINI_KEYS = [
 
 export const KEY_LABELS = ['Analyst key', 'Translator key', 'Synthesizer key'];
 
-const MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-2.5-flash', 'gemini-2.5-flash'];
+// Keep alternatives distinct: repeating a model with the same credential cannot
+// recover from an invalid key and only multiplies requests and noisy logs.
+const MODEL_CANDIDATES = ['gemini-2.5-flash'];
 const TIMEOUT_MS = 120_000;
 
 export type GeminiPart =
@@ -107,16 +109,25 @@ export async function callGeminiJson<T>(
   opts: CallOptions = {},
 ): Promise<{ json: T; meta: GeminiCallMeta }> {
   const keyOrder = [0, 1, 2].map((i) => (stageIndex + i) % GEMINI_KEYS.length);
+  const triedKeys = new Set<string>();
   const attempts: string[] = [];
   let lastError: unknown = null;
 
   for (const keyIndex of keyOrder) {
+    const key = GEMINI_KEYS[keyIndex]?.trim();
+    if (!key) {
+      attempts.push(`key ${keyIndex + 1}: not configured`);
+      continue;
+    }
+    // A copied/pasted key in multiple deployment slots is the same credential.
+    if (triedKeys.has(key)) continue;
+    triedKeys.add(key);
     for (const model of MODEL_CANDIDATES) {
       if (opts.signal?.aborted) throw new Error('Cancelled');
       opts.onAttempt?.(keyIndex, model);
       const started = performance.now();
       try {
-        const raw = await postToGemini(GEMINI_KEYS[keyIndex], model, parts, opts);
+        const raw = await postToGemini(key, model, parts, opts);
         const json = parseJsonLoose<T>(raw);
         return {
           json,
@@ -127,9 +138,8 @@ export async function callGeminiJson<T>(
         attempts.push(
           `key ${keyIndex + 1} / ${model}: ${err instanceof Error ? err.message : String(err)}`,
         );
-        // A model-level 404 is not worth retrying with the other models on the
-        // same key forever — but key errors (403 quota etc.) justify key rotation,
-        // which the outer loop already does.
+        // Continue with a different configured key; never retry this same key
+        // against a duplicate model candidate.
       }
     }
   }

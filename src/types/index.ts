@@ -79,7 +79,7 @@ export interface FinalReport {
   reviewFlags: string[];
 }
 
-export type StageStatus = 'idle' | 'running' | 'done' | 'error';
+export type StageStatus = 'idle' | 'running' | 'done' | 'demo' | 'error';
 
 export interface StageInfo {
   status: StageStatus;
