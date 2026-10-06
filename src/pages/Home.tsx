@@ -24,13 +24,7 @@ export default function Home() {
           onRun={pipeline.run}
           onReset={pipeline.reset}
         />
-        <ReportSection
-          report={pipeline.report}
-          running={pipeline.running}
-          demo={pipeline.demo}
-          reviewed={pipeline.reviewed}
-          onMarkReviewed={pipeline.markReviewed}
-        />
+        <ReportSection report={pipeline.report} running={pipeline.running} />
       </main>
       <Footer />
     </div>

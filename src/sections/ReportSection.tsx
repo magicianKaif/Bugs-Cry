@@ -18,23 +18,11 @@ function Badge({ children, className }: { children: React.ReactNode; className?:
   );
 }
 
-export default function ReportSection({
-  report,
-  running,
-  demo,
-  reviewed,
-  onMarkReviewed,
-}: {
-  report: FinalReport | null;
-  running: boolean;
-  demo: boolean;
-  reviewed: boolean;
-  onMarkReviewed: () => void;
-}) {
+export default function ReportSection({ report, running }: { report: FinalReport | null; running: boolean }) {
   const [exporting, setExporting] = useState(false);
 
   const download = async () => {
-    if (!report || !reviewed) return;
+    if (!report) return;
     setExporting(true);
     try {
       await exportReportDocx(report);
@@ -75,18 +63,13 @@ export default function ReportSection({
                   </Badge>
                   <button
                     onClick={download}
-                    disabled={exporting || !reviewed}
+                    disabled={exporting}
                     className="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-semibold text-ink-900 transition-colors hover:bg-brand-600 disabled:opacity-50"
                   >
-                    {exporting ? 'Building DOCX…' : reviewed ? '⬇ Download .docx' : 'Review before download'}
+                    {exporting ? 'Building DOCX…' : '⬇ Download .docx'}
                   </button>
                 </div>
               </div>
-              {demo && (
-                <div className="mt-4 rounded-lg border border-sev-medium/50 bg-sev-medium/10 px-4 py-3 text-sm text-mist-100">
-                  <strong className="text-sev-medium">Synthetic preview only.</strong> Gemini rejected the deployed API keys. No uploaded evidence was analyzed; replace the deployment keys and rerun for a real report.
-                </div>
-              )}
               <p className="mt-4 text-sm leading-relaxed text-mist-100">{report.executiveSummary}</p>
 
               <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -115,31 +98,7 @@ export default function ReportSection({
               </div>
             )}
 
-            <div className="rounded-xl border border-brand-500/40 bg-ink-800 p-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-mist-0">Human review</p>
-                  <p className="mt-1 text-sm text-mist-400">
-                    {reviewed
-                      ? 'Review acknowledged. The report can now be downloaded.'
-                      : 'Inspect the report records and review flags before enabling the DOCX download.'}
-                  </p>
-                </div>
-                {!reviewed && (
-                  <button
-                    onClick={onMarkReviewed}
-                    className="rounded-lg border border-brand-500 px-4 py-2 text-sm font-semibold text-brand-500 hover:bg-brand-500/10"
-                  >
-                    Mark reviewed
-                  </button>
-                )}
-              </div>
-            </div>
-
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold uppercase tracking-wider text-mist-400">
-                Records · {report.findings.length} finding{report.findings.length === 1 ? '' : 's'}
-              </h4>
               {report.findings.map((f, i) => (
                 <article key={i} className="rounded-xl border border-ink-600 bg-ink-800 p-5">
                   <div className="flex flex-wrap items-center gap-2">
@@ -203,10 +162,10 @@ export default function ReportSection({
             <div className="flex justify-end">
               <button
                 onClick={download}
-                disabled={exporting || !reviewed}
+                disabled={exporting}
                 className="rounded-lg bg-brand-500 px-6 py-3 text-sm font-semibold text-ink-900 transition-colors hover:bg-brand-600 disabled:opacity-50"
               >
-                {exporting ? 'Building DOCX…' : reviewed ? '⬇ Download full report (.docx)' : 'Review before download'}
+                {exporting ? 'Building DOCX…' : '⬇ Download full report (.docx)'}
               </button>
             </div>
           </div>
