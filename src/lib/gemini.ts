@@ -18,7 +18,7 @@ export const GEMINI_KEYS = [
 
 export const KEY_LABELS = ['Analyst key', 'Translator key', 'Synthesizer key'];
 
-const MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+const MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-2.5-flash', 'gemini-2.5-flash'];
 const TIMEOUT_MS = 120_000;
 
 export type GeminiPart =
