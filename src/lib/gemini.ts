@@ -11,9 +11,9 @@
  */
 
 export const GEMINI_KEYS = [
-  'AIzaSyAJe38Ju2MP-K2at0XC4RU9FVPdRcKOCso',
-  'AQ.Ab8RN6JVhliMBBUSwCwRSskoBEzTbgi3XreituTzyntulBavhg',
-  'AQ.Ab8RN6JjQtrfycjZR8XkrJyKLX1L82DXJkmna3-_1SpYlSKwjw',
+  import.meta.env.VITE_GEMINI_API_KEY_ANALYST,
+  import.meta.env.VITE_GEMINI_API_KEY_TRANSLATOR,
+  import.meta.env.VITE_GEMINI_API_KEY_SYNTHESIZER,
 ];
 
 export const KEY_LABELS = ['Analyst key', 'Translator key', 'Synthesizer key'];
