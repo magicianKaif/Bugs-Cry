@@ -14,6 +14,7 @@ export const GEMINI_KEYS = [
   import.meta.env.VITE_GEMINI_API_KEY_ANALYST,
   import.meta.env.VITE_GEMINI_API_KEY_TRANSLATOR,
   import.meta.env.VITE_GEMINI_API_KEY_SYNTHESIZER,
+<<<<<<< HEAD
 ] as const;
 
 export const KEY_LABELS = ['Analyst key', 'Translator key', 'Synthesizer key'];
@@ -26,6 +27,13 @@ const MODEL_CANDIDATES = [
   'gemini-3.5-flash-lite',
   'gemini-2.5-flash-lite',
 ];
+=======
+];
+
+export const KEY_LABELS = ['Analyst key', 'Translator key', 'Synthesizer key'];
+
+const MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-2.5-flash', 'gemini-2.5-flash'];
+>>>>>>> a26b6048b18aa096b0ab37ee573e8b1874100927
 const TIMEOUT_MS = 120_000;
 const MAX_RETRIES_PER_MODEL = 1;
 const RETRY_BASE_MS = 1_000;
