@@ -11,15 +11,24 @@
  */
 
 export const GEMINI_KEYS = [
-  'AIzaSyAJe38Ju2MP-K2at0XC4RU9FVPdRcKOCso',
-  'AQ.Ab8RN6JVhliMBBUSwCwRSskoBEzTbgi3XreituTzyntulBavhg',
-  'AQ.Ab8RN6JjQtrfycjZR8XkrJyKLX1L82DXJkmna3-_1SpYlSKwjw',
-];
+  import.meta.env.VITE_GEMINI_API_KEY_ANALYST,
+  import.meta.env.VITE_GEMINI_API_KEY_TRANSLATOR,
+  import.meta.env.VITE_GEMINI_API_KEY_SYNTHESIZER,
+] as const;
 
 export const KEY_LABELS = ['Analyst key', 'Translator key', 'Synthesizer key'];
 
-const MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-flash-latest'];
+const MODEL_CANDIDATES = [
+  'gemini-3.8-flash',
+  'gemini-3.7-flash',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-2.5-flash-lite',
+];
 const TIMEOUT_MS = 120_000;
+const MAX_RETRIES_PER_MODEL = 1;
+const RETRY_BASE_MS = 1_000;
 
 export type GeminiPart =
   | { text: string }
@@ -45,7 +54,7 @@ async function postToGemini(
   parts: GeminiPart[],
   opts: CallOptions,
 ): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   const linkAbort = () => controller.abort();
@@ -53,7 +62,10 @@ async function postToGemini(
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': key,
+      },
       signal: controller.signal,
       body: JSON.stringify({
         contents: [{ role: 'user', parts }],
@@ -77,6 +89,32 @@ async function postToGemini(
   } finally {
     clearTimeout(timer);
     opts.signal?.removeEventListener('abort', linkAbort);
+  }
+}
+
+async function postToGeminiWithRetry(
+  keyIndex: number,
+  key: string,
+  model: string,
+  parts: GeminiPart[],
+  opts: CallOptions,
+): Promise<string> {
+  let retry = 0;
+  while (true) {
+    if (opts.signal?.aborted) throw new Error('Cancelled');
+    opts.onAttempt?.(keyIndex, model);
+    try {
+      return await postToGemini(key, model, parts, opts);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const status = Number(message.match(/\bHTTP (\d{3})\b/)?.[1]);
+      const retryable = status === 408 || status === 429 || status >= 500;
+      if (!retryable || retry >= MAX_RETRIES_PER_MODEL) throw err;
+
+      const delayMs = RETRY_BASE_MS * 2 ** retry + Math.floor(Math.random() * 250);
+      retry += 1;
+      await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
+    }
   }
 }
 
@@ -106,17 +144,23 @@ export async function callGeminiJson<T>(
   parts: GeminiPart[],
   opts: CallOptions = {},
 ): Promise<{ json: T; meta: GeminiCallMeta }> {
-  const keyOrder = [0, 1, 2].map((i) => (stageIndex + i) % GEMINI_KEYS.length);
+  const keyOrder = [0, 1, 2]
+    .map((i) => (stageIndex + i) % GEMINI_KEYS.length)
+    .filter((keyIndex) => Boolean(GEMINI_KEYS[keyIndex]?.trim()));
+  if (keyOrder.length === 0) {
+    throw new Error(
+      'Gemini API keys are missing. Set VITE_GEMINI_API_KEY_ANALYST, VITE_GEMINI_API_KEY_TRANSLATOR, and VITE_GEMINI_API_KEY_SYNTHESIZER in the deployment environment, then rebuild.',
+    );
+  }
   const attempts: string[] = [];
   let lastError: unknown = null;
 
   for (const keyIndex of keyOrder) {
     for (const model of MODEL_CANDIDATES) {
       if (opts.signal?.aborted) throw new Error('Cancelled');
-      opts.onAttempt?.(keyIndex, model);
       const started = performance.now();
       try {
-        const raw = await postToGemini(GEMINI_KEYS[keyIndex], model, parts, opts);
+        const raw = await postToGeminiWithRetry(keyIndex, GEMINI_KEYS[keyIndex], model, parts, opts);
         const json = parseJsonLoose<T>(raw);
         return {
           json,
@@ -124,9 +168,13 @@ export async function callGeminiJson<T>(
         };
       } catch (err) {
         lastError = err;
+        const message = err instanceof Error ? err.message : String(err);
         attempts.push(
-          `key ${keyIndex + 1} / ${model}: ${err instanceof Error ? err.message : String(err)}`,
+          `key ${keyIndex + 1} / ${model}: ${message}`,
         );
+        if (/\bHTTP (401|403)\b|API key not valid|invalid authentication credentials/i.test(message)) {
+          break;
+        }
         // A model-level 404 is not worth retrying with the other models on the
         // same key forever — but key errors (403 quota etc.) justify key rotation,
         // which the outer loop already does.
